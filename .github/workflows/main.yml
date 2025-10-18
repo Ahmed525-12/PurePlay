@@ -33,14 +33,16 @@ jobs:
     - name: Publish
       run: dotnet publish --configuration Release --output ./publish --no-build
     
-    # Step 6: Deploy via SFTP with password
-    - name: Deploy to SFTP
-      uses: pressidium/lftp-mirror-action@v1
+    # Step 6: Deploy via SFTP
+    - name: SFTP Deploy
+      uses: sand4rt/ftp-deployer@v1.8
       with:
+        sftp: true
         host: ${{ secrets.FTP_SERVER }}
         port: 22
-        user: ${{ secrets.FTP_USERNAME }}
-        pass: ${{ secrets.FTP_PASSWORD }}
-        localDir: './publish/'
-        remoteDir: '/wwwroot/WatchKids/'
-        options: '--verbose'
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        remote_folder: /wwwroot/WatchKids/
+        local_folder: publish
+        cleanup: false
+        include: '["*", "**/*"]'
