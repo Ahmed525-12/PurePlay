@@ -1,4 +1,5 @@
 
+using Dashboard.Handler.ServicesExtension;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using WatchKids.WatchKids.Domain;
@@ -13,16 +14,16 @@ namespace WatchKids
             var builder = WebApplication.CreateBuilder(args);
 
             builder.Services.AddDbContext<WatchKidsDBContext>(options =>
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection")
-       
-    )
-);
-
-            // Identity
+                    options.UseSqlServer(
+                            builder.Configuration.GetConnectionString("DefaultConnection")
+                                                    ));
             builder.Services.AddIdentity<AccountUser, IdentityRole>()
                 .AddEntityFrameworkStores<WatchKidsDBContext>()
                 .AddDefaultTokenProviders();
+
+
+            builder.Services.AddIdentityServices(builder.Configuration);
+            builder.Services.AddAplicationServices();
 
 
             builder.Services.AddAuthentication();
