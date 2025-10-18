@@ -39,6 +39,7 @@ namespace WatchKids
             app.UseHttpsRedirection();
             app.UseAuthentication();
             app.UseAuthorization();
+            app.MapAllAllergens();
             app.Run();
         }
     }
