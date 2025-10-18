@@ -47,6 +47,7 @@ jobs:
         lftp -c "
         set sftp:auto-confirm yes
         set ssl:verify-certificate no
+        set ftp:use-chmod no
         open -u $FTP_USERNAME,$FTP_PASSWORD sftp://$FTP_SERVER:22
         mirror -R --verbose --delete-first ./publish /wwwroot
         bye
