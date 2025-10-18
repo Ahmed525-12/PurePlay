@@ -1,0 +1,6 @@
+@WatchKids_HostAddress = http://localhost:5017
+
+GET {{WatchKids_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
