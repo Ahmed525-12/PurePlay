@@ -3,7 +3,7 @@ name: Deploy to MonsterASP.NET
 on:
   push:
     branches:
-      - master  # Change this to your main branch name (main, master, etc.)
+      - master  # Your branch name
   workflow_dispatch:  # Allows manual trigger from GitHub Actions tab
 
 jobs:
@@ -33,15 +33,14 @@ jobs:
     - name: Publish
       run: dotnet publish --configuration Release --output ./publish --no-build
     
-    # Step 6: Deploy via FTP
-    - name: Deploy to FTP
-      uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+    # Step 6: Deploy via SFTP with password
+    - name: Deploy to SFTP
+      uses: pressidium/lftp-mirror-action@v1
       with:
-        server: ${{ secrets.FTP_SERVER }}
-        username: ${{ secrets.FTP_USERNAME }}
-        password: ${{ secrets.FTP_PASSWORD }}
-        port: 21  # Use 21 for FTP, or 22 for SFTP
-        protocol: ftp  # Change to 'ftps' for FTPS or leave as 'ftp'
-        local-dir: ./publish/
-        server-dir: /wwwroot/WatchKids/  # Your API folder inside wwwroot
-        dangerous-clean-slate: false  # Set to true to delete all files before upload
+        host: ${{ secrets.FTP_SERVER }}
+        port: 22
+        user: ${{ secrets.FTP_USERNAME }}
+        pass: ${{ secrets.FTP_PASSWORD }}
+        localDir: './publish/'
+        remoteDir: '/wwwroot/WatchKids/'
+        options: '--verbose'
