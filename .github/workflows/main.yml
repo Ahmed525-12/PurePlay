@@ -1,0 +1,47 @@
+name: Deploy to MonsterASP.NET
+
+on:
+  push:
+    branches:
+      - main  # Change this to your main branch name (main, master, etc.)
+  workflow_dispatch:  # Allows manual trigger from GitHub Actions tab
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    # Step 1: Checkout the code
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    # Step 2: Setup .NET 8
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+    
+    # Step 3: Restore dependencies
+    - name: Restore dependencies
+      run: dotnet restore
+    
+    # Step 4: Build the project
+    - name: Build
+      run: dotnet build --configuration Release --no-restore
+    
+    # Step 5: Publish the project
+    - name: Publish
+      run: dotnet publish --configuration Release --output ./publish --no-build
+    
+    # Step 6: Deploy via FTP
+    - name: Deploy to FTP
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+      with:
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        port: 21  # Use 21 for FTP, or 22 for SFTP
+        protocol: ftp  # Change to 'ftps' for FTPS or leave as 'ftp'
+        local-dir: ./publish/
+        server-dir: /wwwroot/WatchKids/  # Your API folder inside wwwroot
+        dangerous-clean-slate: false  # Set to true to delete all files before upload
