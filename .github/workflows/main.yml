@@ -3,8 +3,8 @@ name: Deploy to MonsterASP.NET
 on:
   push:
     branches:
-      - master  # Your branch name
-  workflow_dispatch:  # Allows manual trigger from GitHub Actions tab
+      - master
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
@@ -21,24 +21,24 @@ jobs:
       with:
         dotnet-version: '8.0.x'
     
-    # Step 3: Restore dependencies
+    # Step 3: Restore dependencies (with caching for speed)
     - name: Restore dependencies
       run: dotnet restore
     
-    # Step 4: Build the project
-    - name: Build
-      run: dotnet build --configuration Release --no-restore
+    # Step 4: Build and Publish in one step (faster)
+    - name: Build and Publish
+      run: dotnet publish --configuration Release --output ./publish
     
-    # Step 5: Publish the project
-    - name: Publish
-      run: dotnet publish --configuration Release --output ./publish --no-build
+    # Step 5: Create app_offline.htm to stop the application
+    - name: Create app_offline.htm
+      run: echo "App is updating, please wait..." > ./publish/app_offline.htm
     
     # Step 6: Install SFTP tools
     - name: Install lftp
       run: sudo apt-get update && sudo apt-get install -y lftp
     
-    # Step 7: Deploy via SFTP using lftp
-    - name: Deploy to SFTP
+    # Step 7: Upload app_offline.htm first to stop the app
+    - name: Stop Application
       env:
         FTP_SERVER: ${{ secrets.FTP_SERVER }}
         FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
@@ -48,6 +48,42 @@ jobs:
         set sftp:auto-confirm yes
         set ssl:verify-certificate no
         open -u $FTP_USERNAME,$FTP_PASSWORD sftp://$FTP_SERVER:22
-        mirror -R --verbose --no-perms --delete-first ./publish /wwwroot
+        put -O /wwwroot ./publish/app_offline.htm
+        bye
+        "
+    
+    # Step 8: Wait for app to stop
+    - name: Wait for application to stop
+      run: sleep 5
+    
+    # Step 9: Deploy files (faster without --delete-first)
+    - name: Deploy to SFTP
+      env:
+        FTP_SERVER: ${{ secrets.FTP_SERVER }}
+        FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+        FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+      run: |
+        lftp -c "
+        set sftp:auto-confirm yes
+        set ssl:verify-certificate no
+        set net:max-retries 3
+        set net:timeout 30
+        open -u $FTP_USERNAME,$FTP_PASSWORD sftp://$FTP_SERVER:22
+        mirror -R --only-newer --no-perms --parallel=4 ./publish /wwwroot
+        bye
+        "
+    
+    # Step 10: Remove app_offline.htm to restart the app
+    - name: Start Application
+      env:
+        FTP_SERVER: ${{ secrets.FTP_SERVER }}
+        FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+        FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+      run: |
+        lftp -c "
+        set sftp:auto-confirm yes
+        set ssl:verify-certificate no
+        open -u $FTP_USERNAME,$FTP_PASSWORD sftp://$FTP_SERVER:22
+        rm /wwwroot/app_offline.htm
         bye
         "
