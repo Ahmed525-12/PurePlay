@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using System;
+using WatchKids.EndPoints.AuthAccount;
 
 namespace Dashboard.API.EndPoints.AuthAccount;
 
@@ -13,8 +14,9 @@ public static class UserAllEndPoints
             .WithName("Register");
         userAllergensGroup.MapPost("/Login/Email",LoginEmailEndPoint.Handler)
             .WithName("LoginWithEmail");
-       
-            
+        userAllergensGroup.MapPost("/ResetPassword", ResetPasswordEndPoint.Handler)
+           .WithName("ResetPassword").RequireAuthorization();
+
         return app;
     }
 
