@@ -1,4 +1,5 @@
 ﻿using Dashboard.API.EndPoints.AuthAccount;
+using WatchKids.EndPoints.YoutubeVideo;
 
 namespace WatchKids
 {
@@ -7,7 +8,7 @@ namespace WatchKids
         public static WebApplication MapAllAllergens(this WebApplication app)
         {
             app.MapUserAllergens();
-
+            app.MapAllYTVEndPoints();
 
             return app;
         }

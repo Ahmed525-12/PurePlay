@@ -25,6 +25,7 @@ namespace WatchKids
 
             builder.Services.AddIdentityServices(builder.Configuration);
             builder.Services.AddAplicationServices();
+            builder.Services.AddHttpClient();
 
 
             builder.Services.AddAuthentication();
