@@ -13,8 +13,10 @@ namespace WatchKids.EndPoints.YoutubeVideo
                 .WithName("AddYTV");
             MapAllYTVGroup.MapGet("/GetAllYTV", GetAllYTVEndPoint.Handler)
                 .WithName("GetAllYTV");
-            //MapAllYTVGroup.MapGet("/GetbyIdYTV/{id}", GetbyIdYTVEndPoint.Handler)
-            //   .WithName("GetbyIdYTV");
+            MapAllYTVGroup.MapGet("/GetbyIdYTV/{id}", GetbyIdYTVEndPoint.Handler)
+               .WithName("GetbyIdYTV");
+            MapAllYTVGroup.MapDelete("/DeleteYTV/{id}", DeleteYTVEndPoint.Handler)
+         .WithName("DeleteYTV");
 
             return app;
         }
