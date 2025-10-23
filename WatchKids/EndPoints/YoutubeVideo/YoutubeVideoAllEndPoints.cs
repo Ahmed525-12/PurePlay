@@ -11,8 +11,8 @@ namespace WatchKids.EndPoints.YoutubeVideo
             var MapAllYTVGroup = app.MapGroup("/v1/YTV").WithTags("YTV").RequireAuthorization();
             MapAllYTVGroup.MapPost("/AddYTV", AddYTVEndPoint.Handler)
                 .WithName("AddYTV");
-            //MapAllYTVGroup.MapGet("/GetAllYTV", GetAllYTVEndPoint.Handler)
-            //    .WithName("GetAllYTV");
+            MapAllYTVGroup.MapGet("/GetAllYTV", GetAllYTVEndPoint.Handler)
+                .WithName("GetAllYTV");
             //MapAllYTVGroup.MapGet("/GetbyIdYTV/{id}", GetbyIdYTVEndPoint.Handler)
             //   .WithName("GetbyIdYTV");
 
