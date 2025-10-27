@@ -16,6 +16,8 @@ public static class UserAllEndPoints
             .WithName("LoginWithEmail");
         userAllergensGroup.MapPost("/ResetPassword", ResetPasswordEndPoint.Handler)
            .WithName("ResetPassword").RequireAuthorization();
+        userAllergensGroup.MapPost("/CheckPassword", CheckPasswordEndPoint.Handler)
+       .WithName("CheckPassword").RequireAuthorization();
 
         return app;
     }
