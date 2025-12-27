@@ -28,8 +28,6 @@ export async function DELETE(
 
         // Invalidate cache on success
         if (response.ok) {
-            // @ts-ignore - Next.js 16 type mismatch workaround
-            revalidateTag('ytv-list')
             revalidatePath('/home', 'layout')
         }
 
