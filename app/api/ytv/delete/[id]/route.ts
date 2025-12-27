@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { revalidateTag } from 'next/cache'
+import { revalidateTag, revalidatePath } from 'next/cache'
 
 export async function DELETE(
     request: NextRequest,
@@ -28,7 +28,9 @@ export async function DELETE(
 
         // Invalidate cache on success
         if (response.ok) {
+            // @ts-ignore - Next.js 16 type mismatch workaround
             revalidateTag('ytv-list')
+            revalidatePath('/home', 'layout')
         }
 
         // Some endpoints might return 204 No Content

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { revalidateTag } from 'next/cache'
+import { revalidateTag, revalidatePath } from 'next/cache'
 
 export async function POST(request: NextRequest) {
     try {
@@ -26,7 +26,9 @@ export async function POST(request: NextRequest) {
 
         // Invalidate cache on success
         if (response.ok && data.success) {
+            // @ts-ignore - Next.js 16 type mismatch workaround
             revalidateTag('ytv-list')
+            revalidatePath('/home', 'layout')
         }
 
         return NextResponse.json(data, { status: response.status })
