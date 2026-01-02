@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Play, Pause, Volume2, VolumeX, RotateCcw, AlertCircle, Maximize } from 'lucide-react'
+import { Play, Pause, Volume2, VolumeX, RotateCcw, RotateCw, AlertCircle, Maximize, Minimize } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -63,6 +63,7 @@ export default function SafeVideoPlayer({ videoId, className }: SafeVideoPlayerP
     const [isMuted, setIsMuted] = useState(false)
     const [showControls, setShowControls] = useState(true)
     const [hasEnded, setHasEnded] = useState(false)
+    const [isFullscreen, setIsFullscreen] = useState(false)
 
     const playerRef = useRef<SafeYTPlayer | null>(null)
     const progressInterval = useRef<NodeJS.Timeout | null>(null)
@@ -229,16 +230,54 @@ export default function SafeVideoPlayer({ videoId, className }: SafeVideoPlayerP
         return `${mins}:${secs.toString().padStart(2, '0')}`
     }
 
-    const toggleFullscreen = () => {
+
+    const toggleFullscreen = async () => {
         if (!containerRef.current) return
 
-        if (!document.fullscreenElement) {
-            containerRef.current.requestFullscreen().catch(err => {
-                console.error(`Error attempting to enable fullscreen: ${err.message}`);
-            });
-        } else {
-            document.exitFullscreen();
+        try {
+            if (!document.fullscreenElement && !isFullscreen) {
+                // Try native first
+                if (containerRef.current.requestFullscreen) {
+                    await containerRef.current.requestFullscreen()
+                } else if ((containerRef.current as any).webkitRequestFullscreen) {
+                    // iOS Safari specific
+                    await (containerRef.current as any).webkitRequestFullscreen()
+                } else {
+                    // Fallback to CSS fullscreen
+                    setIsFullscreen(true)
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    await document.exitFullscreen()
+                } else if ((document as any).webkitExitFullscreen) {
+                    await (document as any).webkitExitFullscreen()
+                }
+                setIsFullscreen(false)
+            }
+        } catch (err) {
+            console.error(`Fullscreen error, falling back to CSS: ${(err as Error).message}`)
+            setIsFullscreen(!isFullscreen)
         }
+    }
+
+    // Listen for native fullscreen changes to sync state
+    useEffect(() => {
+        const handleFullscreenChange = () => {
+            setIsFullscreen(!!document.fullscreenElement)
+        }
+        document.addEventListener('fullscreenchange', handleFullscreenChange)
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange)
+        return () => {
+            document.removeEventListener('fullscreenchange', handleFullscreenChange)
+            document.removeEventListener('webkitfullscreenchange', handleFullscreenChange)
+        }
+    }, [])
+
+    const skipTime = (seconds: number) => {
+        if (!playerRef.current) return
+        const newTime = currentTime + seconds
+        playerRef.current.seekTo(newTime, true)
+        setCurrentTime(newTime)
     }
 
     // Handle Mouse Move for Controls Visibility
@@ -274,7 +313,10 @@ export default function SafeVideoPlayer({ videoId, className }: SafeVideoPlayerP
             {/* Video Container - The Fortress */}
             <div
                 ref={containerRef}
-                className="relative w-full aspect-video bg-black rounded-none sm:rounded-xl overflow-hidden group shadow-2xl ring-1 ring-white/10"
+                className={cn(
+                    "relative w-full bg-black overflow-hidden group shadow-2xl ring-1 ring-white/10 transition-all duration-300",
+                    isFullscreen ? "fixed inset-0 z-50 h-screen rounded-none" : "aspect-video rounded-none sm:rounded-xl"
+                )}
                 onMouseMove={handleMouseMove}
                 onMouseLeave={() => setShowControls(false)}
             >
@@ -342,6 +384,24 @@ export default function SafeVideoPlayer({ videoId, className }: SafeVideoPlayerP
                                 {isPlaying ? <Pause className="w-8 h-8 fill-current" /> : <Play className="w-8 h-8 fill-current" />}
                             </button>
 
+                            {/* Skip Buttons */}
+                            <button
+                                onClick={(e) => { e.stopPropagation(); skipTime(-10) }}
+                                className="text-white/80 hover:text-white transition-colors p-2"
+                                title="-10s"
+                            >
+                                <RotateCcw className="w-5 h-5" />
+                                <span className="sr-only">-10 seconds</span>
+                            </button>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); skipTime(10) }}
+                                className="text-white/80 hover:text-white transition-colors p-2"
+                                title="+10s"
+                            >
+                                <RotateCw className="w-5 h-5" />
+                                <span className="sr-only">+10 seconds</span>
+                            </button>
+
                             {/* Volume */}
                             <button
                                 onClick={(e) => { e.stopPropagation(); toggleMute() }}
@@ -359,7 +419,7 @@ export default function SafeVideoPlayer({ videoId, className }: SafeVideoPlayerP
                                 onClick={(e) => { e.stopPropagation(); toggleFullscreen() }}
                                 className="text-white/80 hover:text-white transition-colors ml-2"
                             >
-                                <Maximize className="w-5 h-5" />
+                                {isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
                             </button>
                         </div>
                     </div>
