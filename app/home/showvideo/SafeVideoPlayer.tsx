@@ -37,6 +37,7 @@ interface SafeYTPlayer {
     unMute: () => void
     isMuted: () => boolean
     destroy: () => void
+    getPlayerState: () => number
 }
 
 interface SafeYTPlayerEvent {
@@ -131,7 +132,7 @@ export default function SafeVideoPlayer({ videoId, className }: SafeVideoPlayerP
                 events: {
                     onReady: (event: any) => {
                         setDuration(event.target.getDuration())
-                        setIsPlaying(true) // Autoplay started
+                        // setIsPlaying(true) // DO NOT force state here. Let onStateChange handle it.
                         startProgressTracking()
                     },
                     onStateChange: (event: SafeYTPlayerEvent) => {
@@ -188,7 +189,9 @@ export default function SafeVideoPlayer({ videoId, className }: SafeVideoPlayerP
             return
         }
 
-        if (isPlaying) {
+        const playerState = playerRef.current.getPlayerState()
+        // 1 = PLAYING, 3 = BUFFERING
+        if (playerState === 1 || playerState === 3) {
             playerRef.current.pauseVideo()
         } else {
             playerRef.current.playVideo()
