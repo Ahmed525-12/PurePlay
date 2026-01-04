@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 
 export async function POST(request: NextRequest) {
     try {
@@ -26,6 +26,7 @@ export async function POST(request: NextRequest) {
 
         // Invalidate cache on success
         if (response.ok && data.success) {
+            revalidateTag('ytv-list')
             revalidatePath('/home', 'layout')
         }
 

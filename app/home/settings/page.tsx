@@ -36,6 +36,8 @@ export default function SettingsPage() {
     const [ytvError, setYtvError] = useState<string | null>(null)
     const [newYtvUrl, setNewYtvUrl] = useState("")
     const [addingYtv, setAddingYtv] = useState(false)
+    const [playlistUrl, setPlaylistUrl] = useState("")
+    const [importingPlaylist, setImportingPlaylist] = useState(false)
 
     useEffect(() => {
         // Check for session access flag - Time-based validity (10 seconds)
@@ -165,6 +167,39 @@ export default function SettingsPage() {
         }
     }
 
+    const handleImportPlaylist = async (e: React.FormEvent) => {
+        e.preventDefault()
+        if (!playlistUrl) return
+
+        setImportingPlaylist(true)
+        setYtvError(null)
+        try {
+            const token = localStorage.getItem("authToken")
+            const res = await fetch("/api/ytv/import-playlist", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    playlistUrl: playlistUrl
+                })
+            })
+            const data = await res.json()
+            if (data.success) {
+                setPlaylistUrl("")
+                fetchYtvList() // Refresh list
+                alert(data.message) // Show summary
+            } else {
+                setYtvError(data.error || "Failed to import playlist")
+            }
+        } catch (e) {
+            setYtvError("Error importing playlist")
+        } finally {
+            setImportingPlaylist(false)
+        }
+    }
+
     const handleDeleteYtv = async (id: number) => {
         if (!confirm("Are you sure you want to delete this item?")) return
 
@@ -265,6 +300,17 @@ export default function SettingsPage() {
                                 </div>
                                 <Button onClick={handleAddYtv} disabled={addingYtv}>
                                     {addingYtv ? "Adding..." : "Add"}
+                                </Button>
+                            </div>
+
+                            {/* Import Playlist Form */}
+                            <div className="flex flex-col sm:flex-row gap-4 items-end border-b pb-6">
+                                <div className="grid w-full gap-1.5">
+                                    <Label htmlFor="playlist-url">Import from YouTube Playlist</Label>
+                                    <Input id="playlist-url" placeholder="https://youtube.com/playlist?list=..." value={playlistUrl} onChange={e => setPlaylistUrl(e.target.value)} />
+                                </div>
+                                <Button onClick={handleImportPlaylist} disabled={importingPlaylist} variant="outline">
+                                    {importingPlaylist ? "Importing..." : "Import"}
                                 </Button>
                             </div>
 

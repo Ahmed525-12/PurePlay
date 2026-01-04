@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 
 export async function DELETE(
     request: NextRequest,
@@ -28,6 +28,7 @@ export async function DELETE(
 
         // Invalidate cache on success
         if (response.ok) {
+            revalidateTag('ytv-list')
             revalidatePath('/home', 'layout')
         }
 
