@@ -279,47 +279,11 @@ export default function SettingsPage() {
                 </Button>
             </div>
 
-            <Tabs defaultValue="password" className="w-full">
+            <Tabs defaultValue="ytv" className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="password">Reset Password</TabsTrigger>
                     <TabsTrigger value="ytv">YTV Management</TabsTrigger>
+                    <TabsTrigger value="password">Reset Password</TabsTrigger>
                 </TabsList>
-
-                <TabsContent value="password">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Change Password</CardTitle>
-                            <CardDescription>
-                                Update your password securely.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            {passwordMsg && (
-                                <Alert variant={passwordMsg.type === 'error' ? "destructive" : "default"} className={passwordMsg.type === 'success' ? "border-green-500 text-green-700" : ""}>
-                                    <AlertTitle>{passwordMsg.type === 'error' ? "Error" : "Success"}</AlertTitle>
-                                    <AlertDescription>{passwordMsg.text}</AlertDescription>
-                                </Alert>
-                            )}
-                            <div className="space-y-2">
-                                <Label htmlFor="current">Current Password</Label>
-                                <Input id="current" type="password" value={oldPassword} onChange={e => setOldPassword(e.target.value)} />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="new">New Password</Label>
-                                <Input id="new" type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="confirm">Confirm New Password</Label>
-                                <Input id="confirm" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
-                            </div>
-                        </CardContent>
-                        <CardFooter>
-                            <Button onClick={handlePasswordReset} disabled={loadingPassword}>
-                                {loadingPassword ? "Updating..." : "Update Password"}
-                            </Button>
-                        </CardFooter>
-                    </Card>
-                </TabsContent>
 
                 <TabsContent value="ytv">
                     <Card>
@@ -397,6 +361,42 @@ export default function SettingsPage() {
                                 </Table>
                             </div>
                         </CardContent>
+                    </Card>
+                </TabsContent>
+
+                <TabsContent value="password">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Change Password</CardTitle>
+                            <CardDescription>
+                                Update your password securely.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {passwordMsg && (
+                                <Alert variant={passwordMsg.type === 'error' ? "destructive" : "default"} className={passwordMsg.type === 'success' ? "border-green-500 text-green-700" : ""}>
+                                    <AlertTitle>{passwordMsg.type === 'error' ? "Error" : "Success"}</AlertTitle>
+                                    <AlertDescription>{passwordMsg.text}</AlertDescription>
+                                </Alert>
+                            )}
+                            <div className="space-y-2">
+                                <Label htmlFor="current">Current Password</Label>
+                                <Input id="current" type="password" value={oldPassword} onChange={e => setOldPassword(e.target.value)} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="new">New Password</Label>
+                                <Input id="new" type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="confirm">Confirm New Password</Label>
+                                <Input id="confirm" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
+                            </div>
+                        </CardContent>
+                        <CardFooter>
+                            <Button onClick={handlePasswordReset} disabled={loadingPassword}>
+                                {loadingPassword ? "Updating..." : "Update Password"}
+                            </Button>
+                        </CardFooter>
                     </Card>
                 </TabsContent>
             </Tabs>

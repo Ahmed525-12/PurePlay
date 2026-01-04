@@ -103,6 +103,11 @@ export default function Home() {
 
         const res = await fetch("/api/ytv/getall", { method: "GET", headers, cache: "no-store" })
 
+        if (res.status === 404) {
+          setVideos([])
+          return
+        }
+
         if (!res.ok) {
           const txt = await res.text().catch(() => "")
           throw new Error(`Server returned ${res.status}${txt ? `: ${txt}` : ""}`)
@@ -164,7 +169,15 @@ export default function Home() {
         </div>
       )}
 
-      {!loading && videos.length === 0 && <p className="text-center text-gray-600 mt-8">لا توجد مقاطع للعرض</p>}
+      {!loading && videos.length === 0 && !error && (
+        <div className="text-center mt-12">
+          <p className="text-xl text-gray-600 font-semibold mb-2">لا توجد مقاطع</p>
+          <p className="text-gray-500">
+            لإضافة مقطع <span className="text-blue-600 underline cursor-pointer" onClick={() => router.push('/home/settings')}>اذهب إلى الإعدادات</span>
+          </p>
+        </div>
+      )}
+
 
 
     </div>
