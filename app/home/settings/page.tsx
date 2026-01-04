@@ -71,26 +71,25 @@ export default function SettingsPage() {
             const token = localStorage.getItem("authToken")
             if (!token) return
 
-            const res = await fetch("/api/ytv/getall", { // Using existing proxy or direct if configured?
-                // Wait, user requirement says reuse /app/api helpers or read base URL.
-                // Existing /app/home/page.tsx uses /api/ytv/getall (proxied).
-                // Let's assume we can use the same endpoint if it exists or use our direct fetch logic.
-                // The prompt asked to create GET /v1/YTV/GetAllYTV wrapper? 
-                // Wait, existing /api/ytv/getall already exists. Let's use it.
+            const res = await fetch("/api/ytv/getall", {
                 method: "GET",
                 headers: { "Authorization": `Bearer ${token}` }
             })
 
-            if (!res.ok) throw new Error("Failed to fetch")
-
             const data = await res.json()
+
+            if (!res.ok) {
+                throw new Error(data.error || `Server error: ${res.status}`)
+            }
+
             if (data.success) {
                 setYtvList(data.value)
             } else {
                 setYtvError(data.error || "Failed to load list")
             }
-        } catch (e) {
-            setYtvError("Failed to fetch YTV list")
+        } catch (e: any) {
+            console.error("Fetch YTV Error:", e)
+            setYtvError(`Error: ${e.message || "Failed to fetch YTV list"}`)
         } finally {
             setYtvLoading(false)
         }
