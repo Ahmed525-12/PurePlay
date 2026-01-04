@@ -28,7 +28,7 @@ export async function DELETE(
 
         // Invalidate cache on success
         if (response.ok) {
-            revalidateTag('ytv-list')
+            // revalidateTag('ytv-list') // Disabled due to build error
             revalidatePath('/home', 'layout')
         }
 

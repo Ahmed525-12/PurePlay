@@ -39,6 +39,14 @@ export default function SettingsPage() {
     const [playlistUrl, setPlaylistUrl] = useState("")
     const [importingPlaylist, setImportingPlaylist] = useState(false)
 
+    const handleSessionExpired = () => {
+        localStorage.removeItem("authToken")
+        localStorage.removeItem("user")
+        sessionStorage.removeItem("settings_access")
+        router.push("/")
+        alert("Session expired. Please login again.")
+    }
+
     useEffect(() => {
         // Check for session access flag - Time-based validity (10 seconds)
         // This prevents double-mount issues in React Strict Mode while ensuring ephemeral access
@@ -77,6 +85,11 @@ export default function SettingsPage() {
             })
 
             const data = await res.json()
+
+            if (res.status === 401) {
+                handleSessionExpired()
+                return
+            }
 
             if (!res.ok) {
                 throw new Error(data.error || `Server error: ${res.status}`)
@@ -161,6 +174,12 @@ export default function SettingsPage() {
                     YTVUrl: newYtvUrl
                 })
             })
+
+            if (res.status === 401) {
+                handleSessionExpired()
+                return
+            }
+
             const data = await res.json()
             if (data.success) {
                 setNewYtvUrl("")
@@ -193,6 +212,12 @@ export default function SettingsPage() {
                     playlistUrl: playlistUrl
                 })
             })
+
+            if (res.status === 401) {
+                handleSessionExpired()
+                return
+            }
+
             const data = await res.json()
             if (data.success) {
                 setPlaylistUrl("")
@@ -217,6 +242,11 @@ export default function SettingsPage() {
                 method: "DELETE",
                 headers: { "Authorization": `Bearer ${token}` }
             })
+
+            if (res.status === 401) {
+                handleSessionExpired()
+                return
+            }
 
             if (res.ok) { // checking ok or json success depending on implementation
                 fetchYtvList()

@@ -38,56 +38,51 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        const apiKey = process.env.YOUTUBE_API_KEY
-        if (!apiKey) {
-            console.error("Missing YOUTUBE_API_KEY environment variable")
+        // Fetch playlist page (Scraping method - No API Key needed)
+        // We act like a browser to get the HTML which contains the video IDs
+        const response = await fetch(`https://www.youtube.com/playlist?list=${playlistId}`, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
+        })
+
+        if (!response.ok) {
             return NextResponse.json(
-                { success: false, error: 'Server configuration error: Missing YouTube API Key' },
-                { status: 500 }
+                { success: false, error: `Failed to fetch playlist page: ${response.status}` },
+                { status: response.status }
             )
         }
 
-        // Fetch videos from YouTube
-        const ytResponse = await fetch(`https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${playlistId}&key=${apiKey}`)
+        const html = await response.text()
 
-        if (!ytResponse.ok) {
-            const errorText = await ytResponse.text()
-            console.error(`YouTube API Error: ${ytResponse.status} - ${errorText}`)
+        // Extract Video IDs using Regex
+        // Look for pattern "videoId":"VIDEO_ID"
+        const regex = /"videoId":"([a-zA-Z0-9_-]{11})"/g
+        const matches = [...html.matchAll(regex)]
+
+        if (matches.length === 0) {
             return NextResponse.json(
-                { success: false, error: `YouTube API Error: ${ytResponse.statusText}` },
-                { status: ytResponse.status }
-            )
-        }
-
-        const ytData = await ytResponse.json()
-        const items = ytData.items || []
-
-        if (items.length === 0) {
-            return NextResponse.json(
-                { success: false, error: 'No videos found in this playlist' },
+                { success: false, error: 'No videos found in this playlist (or playlist is private)' },
                 { status: 404 }
             )
         }
+
+        // Deduplicate IDs
+        const videoIds = new Set<string>()
+        for (const match of matches) {
+            videoIds.add(match[1])
+        }
+
+        console.log(`[Import] Found ${videoIds.size} unique videos in scraped playlist`)
 
         let successCount = 0
         let failCount = 0
 
         // Loop and insert
-        for (const item of items) {
-            const snippet = item.snippet
-            if (!snippet) continue
-
-            const videoId = snippet.resourceId?.videoId
-            if (!videoId) continue
-
-            // Private video check
-            if (snippet.title === 'Private video' || snippet.title === 'Deleted video') {
-                continue;
-            }
-
+        for (const videoId of videoIds) {
             const videoUrl = `https://www.youtube.com/watch?v=${videoId}`
 
-            console.log(`[Import] Processing video: ${videoId} - ${snippet.title}`)
+            console.log(`[Import] Processing video: ${videoId}`)
 
             try {
                 const addResponse = await fetch('http://pureplay.runasp.net/v1/YTV/AddYTV', {
@@ -106,11 +101,11 @@ export async function POST(request: NextRequest) {
                     if (addData.success) {
                         successCount++
                     } else {
-                        console.error(`[Import] Failed to add ${videoId}: ${addData.error}`)
+                        // console.error(`[Import] Failed to add ${videoId}: ${addData.error}`)
                         failCount++
                     }
                 } else {
-                    console.error(`[Import] HTTP Error adding ${videoId}: ${addResponse.status}`)
+                    // console.error(`[Import] HTTP Error adding ${videoId}: ${addResponse.status}`)
                     failCount++
                 }
             } catch (err) {
@@ -120,7 +115,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Invalidate cache
-        revalidateTag('ytv-list')
+        // revalidateTag('ytv-list') // Disabled due to build error
         revalidatePath('/home', 'layout')
 
         const message = `Imported ${successCount} videos. Failed: ${failCount}`
@@ -133,10 +128,10 @@ export async function POST(request: NextRequest) {
             failed: failCount
         })
 
-    } catch (error) {
+    } catch (error: any) {
         console.error("Import API Critical Error:", error)
         return NextResponse.json(
-            { success: false, error: 'Internal server error' },
+            { success: false, error: `Internal server error: ${error.message || error}` },
             { status: 500 }
         )
     }

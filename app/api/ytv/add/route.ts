@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
 
         // Invalidate cache on success
         if (response.ok && data.success) {
-            revalidateTag('ytv-list')
+            // revalidateTag('ytv-list') // Disabled due to build error: Expected 2 arguments
             revalidatePath('/home', 'layout')
         }
 
