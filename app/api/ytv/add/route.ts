@@ -40,6 +40,17 @@ export async function POST(request: NextRequest) {
             body: JSON.stringify(body),
         })
 
+        if (!response.ok) {
+            let errorText = await response.text()
+            if (errorText.length > 500) errorText = errorText.substring(0, 500) + "..."
+
+            console.error(`Add YTV Backend Error (${response.status}):`, errorText)
+            return NextResponse.json(
+                { success: false, error: `Backend API Error: ${response.status} - ${errorText}` },
+                { status: response.status }
+            )
+        }
+
         let data;
         try {
             data = await response.json()
@@ -47,7 +58,7 @@ export async function POST(request: NextRequest) {
             console.error("Add YTV: Backend returned non-JSON:", response.status, parseError)
             return NextResponse.json(
                 { success: false, error: `Backend API Error: ${response.status} (Invalid JSON)` },
-                { status: response.status === 200 ? 500 : response.status }
+                { status: 500 }
             )
         }
 

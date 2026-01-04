@@ -8,6 +8,16 @@ export async function GET(request: Request) {
     // Use the cached fetch helper
     const response = await fetchYTVList(incomingAuth)
 
+    if (!response.ok) {
+      let errorText = await response.text()
+      if (errorText.length > 500) errorText = errorText.substring(0, 500) + "..."
+      console.error(`Backend API Error (${response.status}):`, errorText)
+      return NextResponse.json(
+        { success: false, error: `Backend API Error: ${response.status} - ${errorText}` },
+        { status: response.status }
+      )
+    }
+
     let data;
     try {
       data = await response.json()
@@ -15,7 +25,7 @@ export async function GET(request: Request) {
       console.error("Backend returned non-JSON:", response.status, parseError)
       return NextResponse.json(
         { success: false, error: `Backend API Error: ${response.status} (Invalid JSON)` },
-        { status: response.status === 200 ? 500 : response.status }
+        { status: 500 }
       )
     }
 
