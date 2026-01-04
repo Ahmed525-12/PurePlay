@@ -140,7 +140,16 @@ export default function SettingsPage() {
         e.preventDefault()
         if (!newYtvUrl) return
 
+        // Basic YouTube URL validation
+        const ytRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/
+        if (!ytRegex.test(newYtvUrl)) {
+            setYtvError("Please enter a valid YouTube URL")
+            return
+        }
+
         setAddingYtv(true)
+        setYtvError(null)
+
         try {
             const token = localStorage.getItem("authToken")
             const res = await fetch("/api/ytv/add", {
@@ -194,7 +203,7 @@ export default function SettingsPage() {
                 setYtvError(data.error || "Failed to import playlist")
             }
         } catch (e) {
-            setYtvError("Error importing playlist")
+            setYtvError("An error occurred while importing the playlist")
         } finally {
             setImportingPlaylist(false)
         }

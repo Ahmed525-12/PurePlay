@@ -13,6 +13,24 @@ export async function POST(request: NextRequest) {
             )
         }
 
+        const { YTVUrl } = body
+
+        if (!YTVUrl) {
+            return NextResponse.json(
+                { success: false, error: 'Video URL is required' },
+                { status: 400 }
+            )
+        }
+
+        // Basic YouTube URL validation
+        const ytRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/
+        if (!ytRegex.test(YTVUrl)) {
+            return NextResponse.json(
+                { success: false, error: 'Invalid YouTube URL' },
+                { status: 400 }
+            )
+        }
+
         const response = await fetch('http://pureplay.runasp.net/v1/YTV/AddYTV', {
             method: 'POST',
             headers: {
