@@ -10,10 +10,9 @@ export async function fetchYTVList(token: string) {
             // The current route passes "incomingAuth" directly which is the full header value.
             'Content-Type': 'application/json',
         },
+        cache: 'no-store',
         next: {
-            tags: ['ytv-list'],
-            // Optional: Revalidate every hour as a fallback
-            revalidate: 3600
+            tags: ['ytv-list']
         }
     })
 

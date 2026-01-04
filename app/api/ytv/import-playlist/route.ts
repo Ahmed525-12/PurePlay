@@ -77,9 +77,16 @@ export async function POST(request: NextRequest) {
             // const title = snippet.title
             // const thumbnail = snippet.thumbnails?.high?.url || snippet.thumbnails?.medium?.url || snippet.thumbnails?.default?.url
 
+            // Private video check
+            if (snippet.title === 'Private video' || snippet.title === 'Deleted video') {
+                continue;
+            }
+
             // Construct the YTVUrl expected by the AddYTV endpoint
             // The AddYTV endpoint likely expects a YouTube URL (e.g. watch?v=...) based on previous usage "YTVUrl: newYtvUrl"
             const videoUrl = `https://www.youtube.com/watch?v=${videoId}`
+
+            console.log(`[Import] Adding video: ${videoId} - ${snippet.title}`)
 
             try {
                 const addResponse = await fetch('http://pureplay.runasp.net/v1/YTV/AddYTV', {
@@ -95,15 +102,19 @@ export async function POST(request: NextRequest) {
 
                 if (addResponse.ok) {
                     const addData = await addResponse.json()
+                    console.log(`[Import] Result for ${videoId}:`, addData)
                     if (addData.success) {
                         successCount++
                     } else {
+                        console.error(`[Import] Failed to add ${videoId}:`, addData)
                         failCount++
                     }
                 } else {
+                    console.error(`[Import] HTTP Error adding ${videoId}:`, addResponse.status)
                     failCount++
                 }
             } catch (err) {
+                console.error(`[Import] Exception adding ${videoId}:`, err)
                 failCount++
             }
         }
