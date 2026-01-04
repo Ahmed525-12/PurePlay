@@ -40,7 +40,16 @@ export async function POST(request: NextRequest) {
             body: JSON.stringify(body),
         })
 
-        const data = await response.json()
+        let data;
+        try {
+            data = await response.json()
+        } catch (parseError) {
+            console.error("Add YTV: Backend returned non-JSON:", response.status, parseError)
+            return NextResponse.json(
+                { success: false, error: `Backend API Error: ${response.status} (Invalid JSON)` },
+                { status: response.status === 200 ? 500 : response.status }
+            )
+        }
 
         // Invalidate cache on success
         if (response.ok && data.success) {
@@ -49,9 +58,10 @@ export async function POST(request: NextRequest) {
         }
 
         return NextResponse.json(data, { status: response.status })
-    } catch (error) {
+    } catch (error: any) {
+        console.error("Add YTV API Error:", error)
         return NextResponse.json(
-            { success: false, error: 'Internal server error' },
+            { success: false, error: `Internal server error: ${error.message || error}` },
             { status: 500 }
         )
     }
